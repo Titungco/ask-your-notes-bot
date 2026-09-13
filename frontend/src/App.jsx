@@ -1,5 +1,17 @@
 import { useState } from 'react'
-import './App.css'
+import ReactMarkdown from 'react-markdown'
+import Box from '@mui/material/Box'
+import Container from '@mui/material/Container'
+import Typography from '@mui/material/Typography'
+import Paper from '@mui/material/Paper'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Accordion from '@mui/material/Accordion'
+import AccordionSummary from '@mui/material/AccordionSummary'
+import AccordionDetails from '@mui/material/AccordionDetails'
+import SendIcon from '@mui/icons-material/Send'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 const API_URL = 'http://localhost:8000/chat'
 
@@ -40,42 +52,78 @@ function App() {
   }
 
   return (
-    <div className="chat">
-      <h1>Ask Your Notes</h1>
+    <Container maxWidth="sm" sx={{ height: '100vh', display: 'flex', flexDirection: 'column', py: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Ask Your Notes
+      </Typography>
 
-      <div className="messages">
+      <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {messages.map((m, i) => (
-          <div key={i} className={`message ${m.role}`}>
-            <p>{m.content}</p>
-            {m.sources?.length > 0 && (
-              <details className="sources">
-                <summary>Sources ({m.sources.length})</summary>
-                {m.sources.map((s, j) => (
-                  <div key={j} className="source">
-                    <strong>{s.note} #{s.chunk_index}</strong>{' '}
-                    <span>({s.score.toFixed(3)})</span>
-                    <p>{s.content}</p>
-                  </div>
-                ))}
-              </details>
-            )}
-          </div>
-        ))}
-        {loading && <div className="message bot">Thinking…</div>}
-      </div>
+          <Box key={i} sx={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+            <Paper
+              elevation={0}
+              sx={{
+                px: 2,
+                py: 1,
+                bgcolor: m.role === 'user' ? 'primary.main' : 'grey.100',
+                color: m.role === 'user' ? 'primary.contrastText' : 'text.primary',
+                borderRadius: 2,
+              }}
+            >
+              <Typography component="div" variant="body1">
+                <ReactMarkdown>{m.content}</ReactMarkdown>
+              </Typography>
+            </Paper>
 
-      <form onSubmit={sendMessage} className="input-row">
-        <input
+            {m.sources?.length > 0 && (
+              <Accordion sx={{ mt: 0.5 }} disableGutters>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="caption">Sources ({m.sources.length})</Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {m.sources.map((s, j) => (
+                    <Box key={j}>
+                      <Typography variant="caption" fontWeight="bold">
+                        {s.note} #{s.chunk_index}
+                      </Typography>{' '}
+                      <Typography variant="caption" color="text.secondary">
+                        ({s.score.toFixed(3)})
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {s.content}
+                      </Typography>
+                    </Box>
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+            )}
+          </Box>
+        ))}
+
+        {loading && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, alignSelf: 'flex-start' }}>
+            <CircularProgress size={16} />
+            <Typography variant="body2" color="text.secondary">
+              Thinking…
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      <Box component="form" onSubmit={sendMessage} sx={{ display: 'flex', gap: 1, mt: 2 }}>
+        <TextField
+          fullWidth
+          size="small"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question about your notes…"
           disabled={loading}
         />
-        <button type="submit" disabled={loading || !input.trim()}>
+        <Button type="submit" variant="contained" endIcon={<SendIcon />} disabled={loading || !input.trim()}>
           Send
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Box>
+    </Container>
   )
 }
 
