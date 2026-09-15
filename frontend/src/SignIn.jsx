@@ -15,7 +15,10 @@ function SignIn() {
   async function sendMagicLink(e) {
     e.preventDefault()
     setError('')
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    })
     if (error) setError(error.message)
     else setSent(true)
   }
