@@ -1,8 +1,16 @@
-import ollama
+import os
 
-EMBED_MODEL = "mxbai-embed-large"
-CHAT_MODEL = "qwen3"
+from google import genai
+from google.genai import types
+from groq import Groq
+
+EMBED_MODEL = "gemini-embedding-001"
+EMBED_DIM = 768
+CHAT_MODEL = "openai/gpt-oss-120b"
 TOP_K = 4
+
+_gemini = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+_groq = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
 def chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> list[str]:
@@ -23,8 +31,26 @@ def chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> list[str]
 
 
 def embed(text: str) -> list[float]:
-    return ollama.embeddings(model=EMBED_MODEL, prompt=text)["embedding"]
+    result = _gemini.models.embed_content(
+        model=EMBED_MODEL,
+        contents=text,
+        config=types.EmbedContentConfig(output_dimensionality=EMBED_DIM),
+    )
+    return result.embeddings[0].values
 
 
 def to_pgvector(embedding: list[float]) -> str:
     return "[" + ",".join(repr(x) for x in embedding) + "]"
+
+
+def answer(question: str, context: str) -> str:
+    prompt = (
+        "Answer the question using only the notes below. "
+        "If the notes don't contain the answer, say you don't know.\n\n"
+        f"Notes:\n{context}\n\nQuestion: {question}"
+    )
+    result = _groq.chat.completions.create(
+        model=CHAT_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return result.choices[0].message.content

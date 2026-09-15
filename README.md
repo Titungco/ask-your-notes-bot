@@ -1,27 +1,45 @@
 # Ask Your Notes Bot
 
-RAG over your own Markdown notes, fully local via Ollama + Postgres/pgvector.
+Hosted, multi-user RAG over your own Markdown notes: Groq for chat, Gemini for embeddings, Supabase for auth + Postgres/pgvector storage.
 
 ## Prerequisites
 
-- Ollama running locally with `ollama pull qwen3` and `ollama pull mxbai-embed-large`
-- Docker (add yourself to the docker group first: `sudo usermod -aG docker $USER`, then relogin)
+- A Supabase project, with:
+  - the `pgvector` extension enabled (Database > Extensions)
+  - email magic-link auth enabled (on by default)
+- A [Groq API key](https://console.groq.com)
+- A [Gemini API key](https://aistudio.google.com/apikey)
 
-## Run it
+## Configure
+
+Run the setup wizard — it walks you through creating the Supabase project, enabling pgvector, and grabbing the Groq/Gemini API keys, and writes them into `backend/.env` and `frontend/.env` for you:
 
 ```bash
-# 1. Start Postgres + pgvector
-docker compose up -d
-
-# 2. Backend
-cd backend
-source .venv/bin/activate
-python ingest.py          # chunks notes/*.md, embeds, stores in pgvector
-uvicorn main:app --reload # serves http://localhost:8000
-
-# 3. Frontend (separate terminal)
-cd frontend
-npm run dev                # serves http://localhost:5173
+./scripts/setup-cloud.sh
 ```
 
-Drop more `.md` files into `notes/` and re-run `python ingest.py` to reindex.
+Or do it by hand: copy `backend/.env.example` → `backend/.env` and `frontend/.env.example` → `frontend/.env`, then fill in the values yourself.
+
+## Run it locally
+
+```bash
+# Backend
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload   # http://localhost:8000
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev                 # http://localhost:5173
+```
+
+Sign in with a magic link, then use "Upload note" to add `.md` files (try the ones in `sample-notes/`) and ask questions about them.
+
+## Deploy
+
+- **Frontend**: Vercel, pointed at `frontend/`, with `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` (your Render backend URL) set as environment variables.
+- **Backend**: Render web service, pointed at `backend/` (`uvicorn main:app --host 0.0.0.0 --port $PORT`), with the same variables as `backend/.env` plus `FRONTEND_URL` set to your Vercel URL.
+
+Notes are append-only in this version — no edit/delete yet (see `docs/adr/0003-notes-are-append-only.md`).

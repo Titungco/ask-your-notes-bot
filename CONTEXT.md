@@ -1,11 +1,15 @@
 # Ask Your Notes Bot
 
-A local RAG (retrieval-augmented generation) system that answers questions using a folder of the user's own Markdown notes.
+A hosted, multi-user RAG (retrieval-augmented generation) system that answers questions using each user's own Markdown notes.
 
 ## Language
 
+**User**:
+A person who has signed in and owns a private collection of Notes. The boundary that keeps one person's Notes, Chunks, and Answers isolated from everyone else's.
+_Avoid_: Account, customer
+
 **Note**:
-A Markdown document in the `notes/` folder that the bot can draw answers from.
+A Markdown document uploaded by a User, visible only to that User.
 _Avoid_: Document, file
 
 **Chunk**:
@@ -13,7 +17,7 @@ A contiguous slice of a Note's text, sized to fit the embedding model and overla
 _Avoid_: Passage, segment, snippet
 
 **Ingestion**:
-The offline pipeline that reads Notes, splits each into Chunks, embeds every Chunk, and writes the results to the Vector Store.
+The pipeline that runs when a User adds a Note: splits it into Chunks, embeds each Chunk, and writes them to the Vector Store.
 _Avoid_: Indexing, loading
 
 **Embedding**:
@@ -25,15 +29,15 @@ The Postgres + pgvector table that persists Chunks alongside their Embeddings an
 _Avoid_: Database, vector DB, index
 
 **Query**:
-The user's question submitted through the chat UI. Each Query stands alone — it is answered using only its own text, with no memory of earlier messages.
+A signed-in User's question submitted through the chat UI. Each Query stands alone — it is answered using only its own text, with no memory of earlier messages.
 _Avoid_: Question, prompt
 
 **Retrieval**:
-The step that embeds a Query and finds the top-k most similar Chunks in the Vector Store.
+The step that embeds a Query and finds the top-k most similar Chunks — searched only among the querying User's own Chunks — in the Vector Store.
 _Avoid_: Search, lookup
 
 **Source**:
-A retrieved Chunk shown to the user alongside an Answer, identifying which Note it came from.
+A retrieved Chunk shown to the User alongside an Answer, identifying which Note it came from.
 _Avoid_: Citation, reference
 
 **Answer**:
