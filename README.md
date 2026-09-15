@@ -40,6 +40,6 @@ Sign in with a magic link, then use "Upload note" to add `.md` files (try the on
 ## Deploy
 
 - **Frontend**: Vercel, pointed at `frontend/`, with `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_URL` (your Render backend URL) set as environment variables.
-- **Backend**: Render web service, pointed at `backend/` (`uvicorn main:app --host 0.0.0.0 --port $PORT`), with the same variables as `backend/.env` plus `FRONTEND_URL` set to your Vercel URL.
+- **Backend**: Render, via the `render.yaml` Blueprint at the repo root (New > Blueprint, select this repo) — it prompts for the secret env vars at setup time. Alternatively, create a Web Service by hand pointed at `backend/` (`uvicorn main:app --host 0.0.0.0 --port $PORT`, Free plan) with the same variables as `backend/.env` plus `FRONTEND_URL` set to your Vercel URL.
 
 Notes are append-only in this version — no edit/delete yet (see `docs/adr/0003-notes-are-append-only.md`).
